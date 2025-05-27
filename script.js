@@ -1,4 +1,3 @@
-
 async function submitToAI() {
   const inputText = document.getElementById("chat-input").value;
   const chatLog = document.getElementById("chat-log");
