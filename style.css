@@ -1,16 +1,40 @@
+:root {
+  --bg-color: #000;
+  --text-color: #fff;
+  --container-bg: #1e1e1e;
+}
+body.light {
+  --bg-color: #f4f4f4;
+  --text-color: #000;
+  --container-bg: #fff;
+}
 body {
   font-family: Arial, sans-serif;
-  background: #f4f4f4;
+  background: var(--bg-color);
+  color: var(--text-color);
   margin: 0;
   padding: 20px;
+  transition: background 0.3s, color 0.3s;
+}
+.mode-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid var(--text-color);
+  color: var(--text-color);
+  border-radius: 4px;
+  cursor: pointer;
 }
 .container {
-  background: #fff;
+  background: var(--container-bg);
   max-width: 800px;
-  margin: auto;
+  margin: 60px auto 0;
   padding: 30px;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  transition: background 0.3s;
 }
 h1 {
   text-align: center;
@@ -22,14 +46,16 @@ h1 {
 input[type="file"] {
   display: block;
   margin-bottom: 10px;
+  color: var(--text-color);
 }
 button {
   padding: 10px 20px;
   background: #007bff;
-  color: white;
+  color: #fff;
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  transition: background 0.3s;
 }
 button:hover {
   background: #0056b3;
@@ -38,8 +64,15 @@ button:hover {
   margin-top: 20px;
 }
 #parsed-scope-content {
-  background: #eee;
+  background: #333;
+  color: #fff;
   padding: 15px;
   border-radius: 6px;
   min-height: 100px;
+  white-space: pre-wrap;
+  transition: background 0.3s, color 0.3s;
+}
+body.light #parsed-scope-content {
+  background: #eee;
+  color: #000;
 }
