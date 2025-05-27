@@ -20,10 +20,15 @@
 async function submitToAI() {
   const inputEl = document.getElementById('sow-input');
   const sowText = inputEl.value.trim();
+  const outputEl = document.getElementById('parsed-scope-content');
+
   if (!sowText) {
     alert('Please enter the Scope of Work text.');
     return;
   }
+
+  // Clear previous result and show a loading indicator
+  outputEl.textContent = 'Processing...';
 
   try {
     const response = await fetch('https://x8ki-letl-twmt.n7.xano.io/api:8VEpb5nM/submit-sow', {
@@ -39,13 +44,15 @@ async function submitToAI() {
       const errorText = await response.text();
       console.error('Xano error', response.status, errorText);
       alert(`Error processing text (${response.status}): see console for details.`);
+      outputEl.textContent = '';
       return;
     }
 
     const result = await response.json();
-    document.getElementById('parsed-scope-content').textContent = result.parsed_scope;
+    outputEl.textContent = result.parsed_scope;
   } catch (error) {
     console.error('Network error', error);
     alert('Network error: ' + error.message);
+    outputEl.textContent = '';
   }
 }
