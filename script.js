@@ -35,21 +35,28 @@ async function submitToAI() {
     fullText += pageText + '\n\n';
   }
 
-  const response = await fetch('https://x8ki-letl-twmt.n7.xano.io/api:8VEpb5nM/submit-sow', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      project_name: 'Uploaded PDF Estimate',
-      sow_text: fullText
-    })
-  });
+  try {
+    const response = await fetch('https://x8ki-letl-twmt.n7.xano.io/api:8VEpb5nM/submit-sow', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        project_name: 'Uploaded PDF Estimate',
+        sow_text: fullText
+      })
+    });
 
-  if (!response.ok) {
-    alert('Error processing PDF. Please try again.');
-    return;
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Xano error', response.status, errorText);
+      alert(`Error processing PDF (${response.status}): see console for details.`);
+      return;
+    }
+
+    const result = await response.json();
+    const container = document.getElementById('parsed-scope-content');
+    container.textContent = result.parsed_scope;
+  } catch (error) {
+    console.error('Network error', error);
+    alert('Network error: ' + error.message);
   }
-
-  const result = await response.json();
-  const container = document.getElementById('parsed-scope-content');
-  container.innerHTML = result.parsed_scope;
 }
