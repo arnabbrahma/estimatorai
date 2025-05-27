@@ -38,7 +38,9 @@ async function submitToAI() {
   try {
     const response = await fetch('https://x8ki-letl-twmt.n7.xano.io/api:8VEpb5nM/submit-sow', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         project_name: 'Uploaded PDF Estimate',
         sow_text: fullText
