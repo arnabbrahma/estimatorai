@@ -5,19 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Estimating Assistant</title>
   <link rel="stylesheet" href="style.css">
-  <!-- PDF.js library -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.min.js"></script>
 </head>
 <body>
   <button id="mode-toggle" class="mode-toggle">Day Mode</button>
   <div class="container">
     <h1>AI Estimating Assistant</h1>
 
-    <!-- PDF Upload Section -->
-    <section class="upload-section">
-      <h2>Upload Scope of Work (PDF)</h2>
-      <input type="file" id="sow-upload" accept="application/pdf">
-      <button onclick="submitToAI()">Submit PDF</button>
+    <!-- Text Input Section -->
+    <section class="input-section">
+      <h2>Enter Scope of Work</h2>
+      <textarea id="sow-input" placeholder="Paste your Scope of Work text here..." rows="10"></textarea>
+      <button onclick="submitToAI()">Submit Text</button>
     </section>
 
     <!-- Parsed Response -->
