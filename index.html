@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Estimating Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>AI Estimating Dashboard</h1>
+    <section class="upload-section">
+      <h2>1. Upload Scope & Drawings</h2>
+      <input type="file" id="sow-upload" />
+      <input type="file" id="drawing-upload" />
+      <button onclick="submitToAI()">Submit to AI</button>
+    </section>
+
+    <section class="parsed-scope">
+      <h2>2. Parsed Scope Summary</h2>
+      <div id="parsed-scope-content"></div>
+    </section>
+
+    <section class="mto">
+      <h2>3. AI-Generated Material Take-off</h2>
+      <table id="mto-table"></table>
+    </section>
+
+    <section class="estimate">
+      <h2>4. Estimate Summary</h2>
+      <table id="estimate-table"></table>
+    </section>
+
+    <section class="actions">
+      <button onclick="exportToExcel()">Export to Excel</button>
+      <button onclick="saveToDatabase()">Save to Database</button>
+    </section>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
