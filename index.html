@@ -1,17 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Estimating Assistant</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
     <h1>AI Estimating Assistant</h1>
-    <input id="chat-input" type="text" placeholder="Paste Scope of Work here..." />
-    <button onclick="submitToAI()">Send</button>
-    <div id="chat-log" class="chat-log"></div>
+
+    <!-- PDF Upload Section -->
+    <section class="upload-section">
+      <h2>Upload Scope of Work (PDF)</h2>
+      <input type="file" id="sow-upload" accept="application/pdf">
+      <button onclick="submitToAI()">Submit PDF</button>
+    </section>
+
+    <!-- Parsed Response -->
+    <section class="parsed-scope">
+      <h2>Parsed Scope Summary</h2>
+      <div id="parsed-scope-content"></div>
+    </section>
   </div>
   <script src="script.js"></script>
 </body>

@@ -1,19 +1,25 @@
 async function submitToAI() {
-  const inputText = document.getElementById("chat-input").value;
-  const chatLog = document.getElementById("chat-log");
+  const fileInput = document.getElementById('sow-upload');
+  if (!fileInput.files.length) {
+    alert('Please select a PDF file to upload.');
+    return;
+  }
+  const file = fileInput.files[0];
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('project_name', 'Uploaded PDF Estimate');
 
-  chatLog.innerHTML += `<p><strong>You:</strong> ${inputText}</p>`;
-
-  const response = await fetch("https://x8ki-letl-twmt.n7.xano.io/api:8VEpb5nM/submit-sow", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      project_name: "Titanium Tank",
-      sow_text: inputText
-    })
+  const response = await fetch('https://x8ki-letl-twmt.n7.xano.io/api:8VEpb5nM/submit-sow', {
+    method: 'POST',
+    body: formData
   });
 
+  if (!response.ok) {
+    alert('Error processing PDF. Please try again.');
+    return;
+  }
+
   const result = await response.json();
-  chatLog.innerHTML += `<p><strong>AI:</strong> ${result.parsed_scope}</p>`;
-  chatLog.scrollTop = chatLog.scrollHeight;
+  const container = document.getElementById('parsed-scope-content');
+  container.innerHTML = `<pre>${result.parsed_scope}</pre>`;
 }
