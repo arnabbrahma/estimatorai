@@ -8,103 +8,178 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins">
   <style>
     body,h1,h2,h3,h4,h5 {font-family: "Poppins", sans-serif}
-    body {font-size:16px;}
-    .w3-half img{margin-bottom:-6px;margin-top:16px;opacity:0.8;cursor:pointer}
-    .w3-half img:hover{opacity:1}
+    body {font-size:16px; margin:0; padding:0;}
     .top-right-button { position: absolute; top: 20px; right: 30px; }
     .modal-margin { margin-bottom: 30px; }
     .w3-modal { display: none; }
+    #error-banner { display: none; margin: 0; }
+    .w3-main { margin-left:340px; margin-right:40px; padding-top:60px; }
   </style>
-  <!-- Supabase JS (using ESM import) -->
-<script type="module">
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-  const supabaseClient = createClient(
-    'https://vgiyutkufqgfgvixkhqz.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaXl1dGt1ZnFnZmd2aXhraHF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NDM2NjksImV4cCI6MjA2NDAxOTY2OX0.siQnaghNgiZpSj5p5LriQHN1ZkUs4DY7bdPSzD-mCrg'
-  );
-  console.log('Supabase Client Initialized:', supabaseClient);
-  // Make available globally
-  window.supabaseClient = supabaseClient;
-  // Test Supabase connection by querying a known table
-  (async () => {
-    try {
-      const { error } = await window.supabaseClient.from('execution_methodologies').select('id').limit(1);
-      if (error) throw error;
-    } catch (err) {
-      console.error('Supabase connection test failed', err);
-      alert('Supabase connection failed: please verify your Supabase URL and anon key.');
-    }
-  })();
-</script>
-
-<script>
-  // Sign Up Handler with supabaseClient
-  document.getElementById('signupForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const values = Object.fromEntries(new FormData(e.target));
-    console.log('Signing up with:', values);
-    const { data, error } = await window.supabaseClient.auth.signUp(
-      { email: values.email, password: values.password },
-      { data: { full_name: values.full_name, company: values.company, position: values.position, package_selected: values.package_selected } }
+  <!-- Supabase JS (ESM) -->
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    const supabaseClient = createClient(
+      'https://vgiyutkufqgfgvixkhqz.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaXl1dGt1ZnFnZmd2aXhraHF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NDM2NjksImV4cCI6MjA2NDAxOTY2OX0.siQnaghNgiZpSj5p5LriQHN1ZkUs4DY7bdPSzD-mCrg'
     );
-    console.log('Signup response:', { data, error });
-    if (error) alert(error.message);
-    else { alert('Registration successful! Please check your email to confirm.'); closeSignUp(); }
-  };
+    window.supabaseClient = supabaseClient;
+    // Test connectivity
+    (async () => {
+      try {
+        const { error } = await supabaseClient.from('execution_methodologies').select('id').limit(1);
+        if (error) throw error;
+      } catch (err) {
+        console.error('Connection test failed', err);
+        document.getElementById('error-message').textContent = 'Supabase connection failed: check URL/key.';
+        document.getElementById('error-banner').style.display = 'block';
+      }
+    })();
+  </script>
+</head>
+<body>
+  <!-- Error Banner -->
+  <div id="error-banner" class="w3-panel w3-red">
+    <span onclick="this.parentElement.style.display='none'" class="w3-button w3-display-topright">&times;</span>
+    <p id="error-message"></p>
+  </div>
 
-  // Sign In Handler with supabaseClient
-  document.getElementById('signinForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const { email, password } = Object.fromEntries(new FormData(e.target));
-    console.log('Signing in:', { email });
-    const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
-    console.log('Signin response:', { data, error });
-    if (error) alert(error.message);
-    else { alert('Login successful!'); closeSignIn(); }
-  };
-</script>
-    // Define modal controls before usage
+  <!-- Sign In Button -->
+  <div class="top-right-button">
+    <button onclick="openSignIn()" class="w3-button w3-black">Sign In</button>
+  </div>
+
+  <!-- Sidebar -->
+  <nav id="mySidebar" class="w3-sidebar w3-red w3-top w3-collapse w3-large w3-padding" style="width:300px;font-weight:bold;z-index:3;">
+    <a href="javascript:void(0)" onclick="w3_close()" class="w3-button w3-hide-large w3-display-topright" style="width:100%;font-size:22px">Close Menu</a>
+    <div class="w3-container"><h3 class="w3-padding-64"><b>Methodology<br>Builder</b></h3></div>
+    <div class="w3-bar-block">
+      <a href="#features" class="w3-bar-item w3-button w3-hover-white">Features</a>
+      <a href="#pricing" class="w3-bar-item w3-button w3-hover-white">Pricing</a>
+      <a href="#contact" class="w3-bar-item w3-button w3-hover-white">Contact</a>
+    </div>
+  </nav>
+  <div class="w3-overlay w3-hide-large" id="myOverlay" onclick="w3_close()"></div>
+
+  <!-- Main Content -->
+  <div class="w3-main">
+    <section id="features" class="w3-container">
+      <h1 class="w3-jumbo"><b>Build Winning Execution Plans</b></h1>
+      <h2 class="w3-text-red">Features</h2>
+      <hr style="width:50px;border:5px solid red">
+      <p>Answer guided questions and get a professional execution methodology.</p>
+    </section>
+
+    <section id="pricing" class="w3-container" style="margin-top:50px;">
+      <h2 class="w3-text-red">Pricing</h2>
+      <hr style="width:50px;border:5px solid red">
+      <div class="w3-row-padding">
+        <div class="w3-half w3-margin-bottom">
+          <ul class="w3-ul w3-light-grey w3-center">
+            <li class="w3-dark-grey w3-padding-32 w3-xlarge">Basic</li>
+            <li class="w3-padding-16">Execution Plan Builder</li>
+            <li class="w3-padding-16">Save & Rechat</li>
+            <li class="w3-padding-16">Unlimited Projects</li>
+            <li class="w3-padding-16"><h3>$179/month</h3></li>
+            <li class="w3-light-grey w3-padding-24">
+              <button onclick="openSignUp()" class="w3-button w3-white w3-padding-large w3-hover-black">Subscribe</button>
+            </li>
+          </ul>
+        </div>
+        <div class="w3-half">
+          <ul class="w3-ul w3-light-grey w3-center">
+            <li class="w3-red w3-padding-32 w3-xlarge">Pro</li>
+            <li class="w3-padding-16">AI Fine-Tuning</li>
+            <li class="w3-padding-16">Chat History</li>
+            <li class="w3-padding-16">Team Access</li>
+            <li class="w3-padding-16"><h3>$249/month</h3></li>
+            <li class="w3-light-grey w3-padding-24">
+              <button onclick="openSignUp()" class="w3-button w3-red w3-padding-large w3-hover-black">Subscribe</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sign Up Modal -->
+    <div id="id01" class="w3-modal">
+      <div class="w3-modal-content w3-card-4 w3-animate-opacity modal-margin" style="max-width:600px;">
+        <div class="w3-container">
+          <span onclick="closeSignUp()" class="w3-button w3-display-topright">&times;</span>
+          <h2>Sign Up</h2>
+          <form id="signupForm" class="w3-container">
+            <input class="w3-input w3-border w3-margin-bottom" name="full_name" placeholder="Full Name" required>
+            <input class="w3-input w3-border w3-margin-bottom" name="company" placeholder="Company Name" required>
+            <input class="w3-input w3-border w3-margin-bottom" name="position" placeholder="Position" required>
+            <input class="w3-input w3-border w3-margin-bottom" name="email" type="email" placeholder="Email" required>
+            <input class="w3-input w3-border w3-margin-bottom" name="password" type="password" placeholder="Password" required>
+            <select class="w3-select w3-border w3-margin-bottom" name="package_selected" required>
+              <option value="" disabled selected>Select a Package</option>
+              <option value="basic">Basic - $179/month</option>
+              <option value="pro">Pro - $249/month</option>
+            </select>
+            <button type="submit" class="w3-button w3-green w3-block">Create Account</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sign In Modal -->
+    <div id="id02" class="w3-modal">
+      <div class="w3-modal-content w3-card-4 w3-animate-opacity modal-margin" style="max-width:500px;">
+        <div class="w3-container">
+          <span onclick="closeSignIn()" class="w3-button w3-display-topright">&times;</span>
+          <h2>Sign In</h2>
+          <form id="signinForm" class="w3-container">
+            <input class="w3-input w3-border w3-margin-bottom" name="email" type="email" placeholder="Email" required>
+            <input class="w3-input w3-border w3-margin-bottom" name="password" type="password" placeholder="Password" required>
+            <button type="submit" class="w3-button w3-black w3-block">Log In</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <section id="contact" class="w3-container" style="margin-top:50px;">
+      <h2 class="w3-text-red">Contact</h2>
+      <hr style="width:50px;border:5px solid red">
+      <p>Questions? Reach out anytime.</p>
+    </section>
+
+  </div>
+
+  <script>
     function openSignUp() { document.getElementById('id01').style.display = 'block'; }
     function closeSignUp() { document.getElementById('id01').style.display = 'none'; }
     function openSignIn() { document.getElementById('id02').style.display = 'block'; }
     function closeSignIn() { document.getElementById('id02').style.display = 'none'; }
     function w3_open() { document.getElementById('mySidebar').style.display = 'block'; document.getElementById('myOverlay').style.display = 'block'; }
     function w3_close() { document.getElementById('mySidebar').style.display = 'none'; document.getElementById('myOverlay').style.display = 'none'; }
-  </script>
 
-  <script>
-    // Initialize Supabase client and debug
-    const supabaseClient = supabase.createClient(
-      'https://6f017aef7a25c3d1b990e386bbe5fa55f03c058af2c8e4357c6f367d2a71ad13.supabase.co',
-      'bd9b30706e131473f62897c9de8566f8eccbfda30df57ef07693cc267d32be5a'
-    );
-    console.log('Supabase Client Initialized:', supabaseClient);
-
-    // Sign Up Handler with debug
-    document.getElementById('signupForm').onsubmit = async (e) => {
+    // Sign Up Handler
+    document.getElementById('signupForm').onsubmit = async e => {
       e.preventDefault();
       const values = Object.fromEntries(new FormData(e.target));
-      console.log('Signing up with:', values);
-      const { data, error } = await supabaseClient.auth.signUp(
+      const { data, error } = await window.supabaseClient.auth.signUp(
         { email: values.email, password: values.password },
         { data: { full_name: values.full_name, company: values.company, position: values.position, package_selected: values.package_selected } }
       );
       console.log('Signup response:', { data, error });
-      if (error) alert(error.message);
-      else { alert('Registration successful! Please check your email to confirm.'); closeSignUp(); }
+      if (error) showError(error.message); else { alert('Registration successful!'); closeSignUp(); }
     };
 
-    // Sign In Handler with debug
-    document.getElementById('signinForm').onsubmit = async (e) => {
+    // Sign In Handler
+    document.getElementById('signinForm').onsubmit = async e => {
       e.preventDefault();
       const { email, password } = Object.fromEntries(new FormData(e.target));
-      console.log('Signing in:', { email });
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
       console.log('Signin response:', { data, error });
-      if (error) alert(error.message);
-      else { alert('Login successful!'); closeSignIn(); }
+      if (error) showError(error.message); else { alert('Login successful!'); closeSignIn(); }
     };
-  </script>
 
+    // Error Banner
+    function showError(message) {
+      document.getElementById('error-message').textContent = message;
+      document.getElementById('error-banner').style.display = 'block';
+    }
+  </script>
 </body>
 </html>
