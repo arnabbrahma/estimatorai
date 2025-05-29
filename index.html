@@ -19,7 +19,7 @@
 
 <!-- Top-right Sign In Button -->
 <div class="top-right-button">
-  <button onclick="document.getElementById('id02').style.display='block'" class="w3-button w3-black">Sign In</button>
+  <button onclick="openSignIn()" class="w3-button w3-black">Sign In</button>
 </div>
 
 <!-- Sidebar/menu -->
@@ -118,57 +118,37 @@
 
 </div>
 
-<script type="module">
-  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-  const supabase = createClient('https://6f017aef7a25c3d1b990e386bbe5fa55f03c058af2c8e4357c6f367d2a71ad13.supabase.co', 'bd9b30706e131473f62897c9de8566f8eccbfda30df57ef07693cc267d32be5a');
+<script>
+  // Initialize Supabase client
+  const supabase = supabase.createClient('https://6f017aef7a25c3d1b990e386bbe5fa55f03c058af2c8e4357c6f367d2a71ad13.supabase.co', 'bd9b30706e131473f62897c9de8566f8eccbfda30df57ef07693cc267d32be5a');
 
-  function openSignUp() {
-    document.getElementById('id01').style.display = 'block';
-  }
-  function closeSignUp() {
-    document.getElementById('id01').style.display = 'none';
-  }
-  function closeSignIn() {
-    document.getElementById('id02').style.display = 'none';
-  }
+  // Modal control functions (global scope)
+  window.openSignUp = () => document.getElementById('id01').style.display = 'block';
+  window.closeSignUp = () => document.getElementById('id01').style.display = 'none';
+  window.openSignIn = () => document.getElementById('id02').style.display = 'block';
+  window.closeSignIn = () => document.getElementById('id02').style.display = 'none';
 
   // Sign Up Handler
   document.getElementById('signupForm').onsubmit = async (e) => {
     e.preventDefault();
     const form = e.target;
-    const { data, error } = await supabase.functions.invoke('signup', {
-      body: JSON.stringify(Object.fromEntries(new FormData(form)))
-    });
+    const values = Object.fromEntries(new FormData(form));
+    const { data, error } = await supabase.functions.invoke('signup', { body: JSON.stringify(values) });
     if (error) alert(error.message);
-    else {
-      alert('Registration successful, please check your email to confirm.');
-      closeSignUp();
-    }
+    else { alert('Registration successful!'); closeSignUp(); }
   };
 
   // Sign In Handler
   document.getElementById('signinForm').onsubmit = async (e) => {
     e.preventDefault();
-    const form = e.target;
-    const { email, password } = Object.fromEntries(new FormData(form));
+    const { email, password } = Object.fromEntries(new FormData(e.target));
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) alert(error.message);
-    else {
-      alert('Login successful!');
-      closeSignIn();
-    }
+    else { alert('Login successful!'); closeSignIn(); }
   };
-</script>
 
-<script>
-function w3_open() {
-  document.getElementById('mySidebar').style.display = 'block';
-  document.getElementById('myOverlay').style.display = 'block';
-}
-function w3_close() {
-  document.getElementById('mySidebar').style.display = 'none';
-  document.getElementById('myOverlay').style.display = 'none';
-}
+  function w3_open() { document.getElementById('mySidebar').style.display = 'block'; document.getElementById('myOverlay').style.display = 'block'; }
+  function w3_close() { document.getElementById('mySidebar').style.display = 'none'; document.getElementById('myOverlay').style.display = 'none'; }
 </script>
 
 </body>
