@@ -12,6 +12,13 @@
     .top-right-button { position: absolute; top: 20px; right: 30px; }
     .w3-main { margin-left: 300px; margin-right: 40px; padding-top: 60px; }
     #error-banner { display: none; }
+    #chat-container { height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; }
+    .message { margin: 10px 0; }
+    .message.user { text-align: right; }
+    .message.assistant { text-align: left; }
+    #chat-form { display: flex; margin-top: 10px; }
+    #chat-input { flex: 1; padding: 8px; }
+    #chat-submit { padding: 8px 16px; }
   </style>
 </head>
 <body>
@@ -45,21 +52,21 @@
     <!-- Create Execution Methodology -->
     <section id="create" class="w3-container" style="display:none;">
       <h2>Create Execution Methodology</h2>
-      <div id="chat-container" class="w3-panel w3-white w3-padding">
-        <!-- Chat interface goes here -->
-      </div>
+      <div id="chat-container"></div>
+      <form id="chat-form">
+        <input id="chat-input" type="text" placeholder="Type your message..." required />
+        <button id="chat-submit" type="submit" class="w3-button w3-green">Send</button>
+      </form>
     </section>
 
     <!-- Past Execution Methodologies -->
     <section id="past" class="w3-container" style="display:none;">
       <h2>Past Execution Methodologies</h2>
-      <ul id="past-list" class="w3-ul w3-card-4">
-        <!-- Loaded saved plans -->
-      </ul>
+      <ul id="past-list" class="w3-ul w3-card-4"></ul>
     </section>
   </div>
 
-  <!-- Supabase & App Logic -->
+  <!-- Supabase, Gemini & App Logic -->
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
     const supabase = createClient(
@@ -67,37 +74,69 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaXl1dGt1ZnFnZmd2aXhraHF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NDM2NjksImV4cCI6MjA2NDAxOTY2OX0.siQnaghNgiZpSj5p5LriQHN1ZkUs4DY7bdPSzD-mCrg'
     );
 
-    // Expose functions globally
-    window.showSection = (id) => {
-      ['create','past'].forEach(sec => {
-        document.getElementById(sec).style.display = (sec === id) ? 'block' : 'none';
-      });
+    // UI control functions
+    window.showSection = id => {
+      ['create','past'].forEach(sec => document.getElementById(sec).style.display = sec === id ? 'block' : 'none');
     };
-    window.signOut = async () => {
-      await supabase.auth.signOut();
-      location.href = 'index.html';
-    };
-    window.w3_close = () => {
-      document.getElementById('mySidebar').style.display = 'none';
-      document.getElementById('myOverlay').style.display = 'none';
-    };
+    window.signOut = async () => { await supabase.auth.signOut(); location.href = 'index.html'; };
+    window.w3_close = () => { document.getElementById('mySidebar').style.display = 'none'; document.getElementById('myOverlay').style.display = 'none'; };
 
-    // On load, check auth session
-    document.addEventListener('DOMContentLoaded', async () => {
-      const { data: { session }, error: sessErr } = await supabase.auth.getSession();
-      if (sessErr || !session) {
-        location.href = 'index.html';
-        return;
+    // Chat state
+    const chatContainer = document.getElementById('chat-container');
+    const form = document.getElementById('chat-form');
+    const input = document.getElementById('chat-input');
+    let conversation = [{ role: 'system', content: 'You are an expert estimating assistant. Guide the user through executing a methodology for bid proposals.' }];
+
+    function renderMessage(msg) {
+      const div = document.createElement('div');
+      div.className = 'message ' + msg.role;
+      div.textContent = msg.content;
+      chatContainer.appendChild(div);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      conversation.push({ role: 'user', content: text });
+      renderMessage({ role: 'user', content: text });
+      input.value = '';
+
+      // Call Gemini
+      try {
+        const res = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCilMPa97LvCV6adkmw-q0VICslksVYMoE',
+          {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: conversation.map(m => ({ role: m.role, parts: [{ text: m.content }] })) })
+          }
+        );
+        const json = await res.json();
+        const reply = json.result.candidates[0].content.parts[0].text.trim();
+        conversation.push({ role: 'assistant', content: reply });
+        renderMessage({ role: 'assistant', content: reply });
+      } catch (err) {
+        console.error(err);
+        showError('AI generation failed.');
       }
-      const user = session.user;
-      // Populate user info
-      const meta = user.user_metadata;
+    });
+
+    // Load user and default view
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { location.href = 'index.html'; return; }
+      const meta = session.user.user_metadata;
       document.getElementById('user-name').textContent = meta.full_name;
       document.getElementById('user-position').textContent = meta.position;
       document.getElementById('user-company').textContent = meta.company;
-      // Default view
       showSection('create');
     });
+
+    function showError(msg) {
+      document.getElementById('error-message').textContent = msg;
+      document.getElementById('error-banner').style.display = 'block';
+    }
   </script>
 </body>
 </html>
