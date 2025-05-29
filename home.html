@@ -133,12 +133,45 @@
     async function generateMethodology() {
       render('Generating final execution methodology...', 'assistant');
       try {
-        const payload = answers.map((ans, i) => `${questions[i]}\n${ans}`).join('\n\n');
+        const payload = answers.map((ans, i) => `${questions[i]}
+${ans}`).join('
+
+');
+        console.log('Payload:', payload);
         const res = await fetch(
           'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCilMPa97LvCV6adkmw-q0VICslksVYMoE',
-          { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ contents:[{ role:'user', parts:[{ text:`Create an execution methodology based on:
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                {
+                  role: 'user',
+                  parts: [
+                    { text: `Please provide an execution methodology from a contractor perspective to satisfy the client, based on all the questions and answers:
 
-${payload}` }] }] }) }
+${payload}` }
+                  ]
+                }
+              ]
+            })
+          }
+        );
+        const js = await res.json();
+        console.log('Gemini response:', js);
+        if (js.error) throw new Error(js.error.message);
+        const candidates = js.candidates || js.result?.candidates;
+        if (!candidates) throw new Error('No candidates returned');
+        const exec = candidates[0].content.parts[0].text.trim();
+        render(exec, 'assistant');
+        outputDiv.textContent = exec;
+        outputDiv.style.display = 'block';
+        saveBtn.style.display = 'inline-block';
+      } catch(err) {
+        console.error(err);
+        showError('AI generation failed: ' + err.message);
+      }
+    }
         );
         const js = await res.json();
         if (js.error) throw new Error(js.error.message);
