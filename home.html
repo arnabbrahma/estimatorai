@@ -30,14 +30,14 @@
   </div>
 
   <div class="top-right-button">
-    <button onclick="signOut()" class="w3-button w3-red">Sign Out</button>
+    <button id="signoutBtn" class="w3-button w3-red">Sign Out</button>
   </div>
 
   <nav id="mySidebar" class="w3-sidebar w3-light-grey w3-top w3-collapse w3-large w3-padding" style="width:300px;z-index:3;">
     <div class="w3-container w3-blue">
-      <h4 id="user-name"></h4>
-      <p id="user-position"></p>
-      <p id="user-company"></p>
+      <h4 id="user-name">User Name</h4>
+      <p id="user-position">Position</p>
+      <p id="user-company">Company</p>
     </div>
     <div class="w3-bar-block">
       <button class="w3-bar-item w3-button w3-hover-blue" onclick="showSection('create')">Create Plan</button>
@@ -66,20 +66,34 @@
     </section>
   </div>
 
+  <script>
+    // UI controls (non-module)
+    function showSection(id) {
+      ['create','past'].forEach(sec => document.getElementById(sec).style.display = sec===id ? 'block' : 'none');
+      if (id === 'past') loadPast();
+    }
+    function w3_close() {
+      document.getElementById('mySidebar').style.display='none';
+      document.getElementById('myOverlay').style.display='none';
+    }
+    document.getElementById('signoutBtn').addEventListener('click', async () => {
+      try {
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+      } catch (err) {
+        console.error('Sign out error:', err);
+      }
+      window.location.href = 'index.html';
+    });
+  </script>
+
   <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    console.log('Home module loaded');
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
     const supabase = createClient(
       'https://vgiyutkufqgfgvixkhqz.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaXl1dGt1ZnFnZmd2aXhraHF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NDM2NjksImV4cCI6MjA2NDAxOTY2OX0.siQnaghNgiZpSj5p5LriQHN1ZkUs4DY7bdPSzD-mCrg'
     );
-
-    // UI controls
-    window.showSection = id => {
-      ['create','past'].forEach(sec => document.getElementById(sec).style.display = sec===id ? 'block' : 'none');
-      if (id === 'past') loadPast();
-    };
-    window.signOut = async () => { await supabase.auth.signOut(); location.href = 'index.html'; };
-    window.w3_close = () => { document.getElementById('mySidebar').style.display = 'none'; document.getElementById('myOverlay').style.display = 'none'; };
 
     // Guided questions
     const questions = [
@@ -110,7 +124,7 @@
       render(questions[qIndex], 'assistant');
     }
 
-    // Handle user answers and question flow
+    // Chat flow
     chatForm.addEventListener('submit', async e => {
       e.preventDefault();
       const txt = chatInput.value.trim();
@@ -122,94 +136,66 @@
       if (qIndex < questions.length) {
         ask();
       } else {
-        render('Generating final execution methodology...', 'assistant');
-        // Call Gemini
-        try {
-          const payload = answers.map((ans, i) => `${questions[i]}
-${ans}`).join('
-
-');
-          console.log('Sending payload to Gemini:', payload);
-          const response = await fetch(
-            'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCilMPa97LvCV6adkmw-q0VICslksVYMoE',
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                contents: [
-                  {
-                    role: 'user',
-                    parts: [ { text: `Create an execution methodology based on the following details:
-
-${payload}` } ]
-                  }
-                ]
-              })
-            }
-          );
-          console.log('Gemini raw response status:', response.status);
-          const js = await response.json();
-          console.log('Gemini parsed JSON:', js);
-          if (!response.ok || js.error) {
-            const errMsg = js.error ? js.error.message : `HTTP ${response.status}`;
-            throw new Error(errMsg);
-          }
-          const exec = js.result.candidates[0].content.parts[0].text.trim();
-          render(exec, 'assistant');
-          outputDiv.textContent = exec;
-          outputDiv.style.display = 'block';
-          saveBtn.style.display = 'inline-block';
-        } catch (err) {
-          console.error('AI generation failed:', err);
-          showError('AI generation failed: ' + err.message);
-        }
+        await generateMethodology();
       }
     });
 
-    // Save to DB
-    saveBtn.addEventListener('click', async () => {
-      const { data, error } = await supabase.from('execution_methodologies').insert({ methodology: outputDiv.textContent });
-      if (error) showError('Save failed: ' + error.message);
-      else alert('Methodology saved!');
+    async function generateMethodology() {
+      render('Generating final execution methodology...', 'assistant');
+      try {
+        const payload = answers.map((ans,i) => `${questions[i]}\n${ans}`).join('\n\n');
+        console.log('Payload:',payload);
+        const res = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCilMPa97LvCV6adkmw-q0VICslksVYMoE',
+          { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ contents:[{ role:'user', parts:[{ text:`Create an execution methodology based on the following details:\n\n${payload}` }] }] }) }
+        );
+        const js = await res.json();
+        console.log('Gemini response:',js);
+        if (js.error) throw new Error(js.error.message);
+        const exec = js.result.candidates[0].content.parts[0].text.trim();
+        render(exec,'assistant');
+        outputDiv.textContent = exec;
+        outputDiv.style.display='block';
+        saveBtn.style.display='inline-block';
+      } catch(err) {
+        console.error(err);
+        showError('AI generation failed: '+err.message);
+      }
+    }
+
+    // Save
+    saveBtn.addEventListener('click', async()=>{
+      const { error }=await supabase.from('execution_methodologies').insert({methodology:outputDiv.textContent});
+      if(error) showError('Save failed: '+error.message); else alert('Saved!');
     });
 
-    // Load past methodologies
-    async function loadPast() {
-      const { data, error } = await supabase.from('execution_methodologies').select().order('created_at', { ascending: false });
-      const ul = document.getElementById('past-list');
-      ul.innerHTML = '';
-      if (error) { showError('Failed to load past: ' + error.message); return; }
-      data.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = item.methodology.substring(0, 100) + '...';
-        li.onclick = () => {
-          outputDiv.textContent = item.methodology;
-          showSection('create');
-          outputDiv.style.display = 'block';
-          saveBtn.style.display = 'none';
-        };
+    // Load past
+    async function loadPast(){
+      const { data, error }=await supabase.from('execution_methodologies').select().order('created_at',{ascending:false});
+      const ul=document.getElementById('past-list'); ul.innerHTML='';
+      if(error){ showError('Load past failed: '+error.message); return; }
+      data.forEach(item=>{
+        const li=document.createElement('li'); li.textContent=item.methodology.substring(0,100)+'...';
+        li.onclick=()=>{ outputDiv.textContent=item.methodology; showSection('create'); outputDiv.style.display='block'; saveBtn.style.display='none'; };
         ul.appendChild(li);
       });
     }
 
-    // Initialize on load
-    document.addEventListener('DOMContentLoaded', async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        location.href = 'index.html';
-        return;
-      }
-      const meta = session.user.user_metadata;
-      document.getElementById('user-name').textContent = meta.full_name;
-      document.getElementById('user-position').textContent = meta.position;
-      document.getElementById('user-company').textContent = meta.company;
+    // Init
+    document.addEventListener('DOMContentLoaded', async()=>{
+      const { data:{ session } }=await supabase.auth.getSession();
+      if(!session) return location.href='index.html';
+      const meta=session.user.user_metadata;
+      document.getElementById('user-name').textContent=meta.full_name;
+      document.getElementById('user-position').textContent=meta.position;
+      document.getElementById('user-company').textContent=meta.company;
       showSection('create');
       ask();
     });
 
-    function showError(msg) {
-      document.getElementById('error-message').textContent = msg;
-      document.getElementById('error-banner').style.display = 'block';
+    function showError(msg){
+      document.getElementById('error-message').textContent=msg;
+      document.getElementById('error-banner').style.display='block';
     }
   </script>
 </body>
