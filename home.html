@@ -9,9 +9,9 @@
   <style>
     body, h1, h2, h3, h4, h5 { font-family: 'Poppins', sans-serif; }
     body { margin: 0; padding: 0; font-size: 16px; }
-    .top-right-button { position: absolute; top: 20px; right: 30px; }
+    .top-right-button { position: absolute; top: 20px; right: 30px; z-index: 4; }
     .w3-main { margin-left: 300px; margin-right: 40px; padding-top: 60px; }
-    #error-banner { display: none; }
+    #error-banner { display: none; position: fixed; top: 0; width: 100%; z-index: 5; }
     #chat-container { height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; background: #fff; }
     .message { margin: 10px 0; }
     .message.user { text-align: right; color: #007bff; }
@@ -40,14 +40,13 @@
       <p id="user-company">Company</p>
     </div>
     <div class="w3-bar-block">
-      <button class="w3-bar-item w3-button w3-hover-blue" onclick="showSection('create')">Create Plan</button>
-      <button class="w3-bar-item w3-button w3-hover-blue" onclick="showSection('past')">Past Plans</button>
+      <button class="w3-bar-item w3-button w3-hover-blue" id="btn-create">Create Plan</button>
+      <button class="w3-bar-item w3-button w3-hover-blue" id="btn-past">Past Plans</button>
     </div>
   </nav>
-  <div class="w3-overlay w3-hide-large" id="myOverlay" onclick="w3_close()"></div>
+  <div class="w3-overlay w3-hide-large" id="myOverlay"></div>
 
   <div class="w3-main">
-    <!-- Create Execution Methodology -->
     <section id="create" class="w3-container" style="display:none;">
       <h2>Create Execution Methodology</h2>
       <div id="chat-container"></div>
@@ -59,43 +58,40 @@
       <button id="save-btn" class="w3-button w3-blue" style="display:none;">Save Methodology</button>
     </section>
 
-    <!-- Past Execution Methodologies -->
     <section id="past" class="w3-container" style="display:none;">
       <h2>Past Execution Methodologies</h2>
       <ul id="past-list" class="w3-ul w3-card-4"></ul>
     </section>
   </div>
 
-  <script>
-    // UI controls (non-module)
-    function showSection(id) {
-      ['create','past'].forEach(sec => document.getElementById(sec).style.display = sec===id ? 'block' : 'none');
-      if (id === 'past') loadPast();
-    }
-    function w3_close() {
-      document.getElementById('mySidebar').style.display='none';
-      document.getElementById('myOverlay').style.display='none';
-    }
-    document.getElementById('signoutBtn').addEventListener('click', async () => {
-      try {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-      } catch (err) {
-        console.error('Sign out error:', err);
-      }
-      window.location.href = 'index.html';
-    });
-  </script>
-
   <script type="module">
-    console.log('Home module loaded');
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
     const supabase = createClient(
       'https://vgiyutkufqgfgvixkhqz.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaXl1dGt1ZnFnZmd2aXhraHF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NDM2NjksImV4cCI6MjA2NDAxOTY2OX0.siQnaghNgiZpSj5p5LriQHN1ZkUs4DY7bdPSzD-mCrg'
     );
 
-    // Guided questions
+    // DOM refs
+    const signoutBtn = document.getElementById('signoutBtn');
+    const btnCreate = document.getElementById('btn-create');
+    const btnPast = document.getElementById('btn-past');
+    const sections = { create: document.getElementById('create'), past: document.getElementById('past') };
+
+    function showSection(id) {
+      Object.keys(sections).forEach(key => sections[key].style.display = key === id ? 'block' : 'none');
+      if (id === 'past') loadPast();
+    }
+
+    signoutBtn.onclick = async () => {
+      const { error } = await supabase.auth.signOut();
+      if (error) showError('Sign out failed: ' + error.message);
+      else location.href = 'index.html';
+    };
+
+    btnCreate.onclick = () => showSection('create');
+    btnPast.onclick = () => showSection('past');
+
+    // Chat flow
     const questions = [
       '1) Please submit the Scope of Work text.',
       '2) Provide the sequence of tasks as per schedule.',
@@ -120,11 +116,8 @@
       chatC.appendChild(d);
       chatC.scrollTop = chatC.scrollHeight;
     }
-    function ask() {
-      render(questions[qIndex], 'assistant');
-    }
+    function ask() { render(questions[qIndex], 'assistant'); }
 
-    // Chat flow
     chatForm.addEventListener('submit', async e => {
       e.preventDefault();
       const txt = chatInput.value.trim();
@@ -133,67 +126,58 @@
       answers.push(txt);
       chatInput.value = '';
       qIndex++;
-      if (qIndex < questions.length) {
-        ask();
-      } else {
-        await generateMethodology();
-      }
+      if (qIndex < questions.length) ask();
+      else await generateMethodology();
     });
 
     async function generateMethodology() {
       render('Generating final execution methodology...', 'assistant');
       try {
-        const payload = answers.map((ans,i) => `${questions[i]}\n${ans}`).join('\n\n');
-        console.log('Payload:',payload);
+        const payload = answers.map((ans, i) => `${questions[i]}\n${ans}`).join('\n\n');
         const res = await fetch(
           'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCilMPa97LvCV6adkmw-q0VICslksVYMoE',
-          { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ contents:[{ role:'user', parts:[{ text:`Create an execution methodology based on the following details:\n\n${payload}` }] }] }) }
+          { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ contents:[{ role:'user', parts:[{ text:`Create an execution methodology based on:
+
+${payload}` }] }] }) }
         );
         const js = await res.json();
-        console.log('Gemini response:',js);
         if (js.error) throw new Error(js.error.message);
         const exec = js.result.candidates[0].content.parts[0].text.trim();
         render(exec,'assistant');
         outputDiv.textContent = exec;
         outputDiv.style.display='block';
         saveBtn.style.display='inline-block';
-      } catch(err) {
-        console.error(err);
-        showError('AI generation failed: '+err.message);
-      }
+      } catch(err) { showError('AI generation failed: ' + err.message); }
     }
 
-    // Save
-    saveBtn.addEventListener('click', async()=>{
-      const { error }=await supabase.from('execution_methodologies').insert({methodology:outputDiv.textContent});
-      if(error) showError('Save failed: '+error.message); else alert('Saved!');
-    });
+    saveBtn.onclick = async () => {
+      const { error } = await supabase.from('execution_methodologies').insert({ methodology: outputDiv.textContent });
+      if (error) showError('Save failed: ' + error.message); else alert('Saved!');
+    };
 
-    // Load past
-    async function loadPast(){
-      const { data, error }=await supabase.from('execution_methodologies').select().order('created_at',{ascending:false});
-      const ul=document.getElementById('past-list'); ul.innerHTML='';
-      if(error){ showError('Load past failed: '+error.message); return; }
-      data.forEach(item=>{
-        const li=document.createElement('li'); li.textContent=item.methodology.substring(0,100)+'...';
-        li.onclick=()=>{ outputDiv.textContent=item.methodology; showSection('create'); outputDiv.style.display='block'; saveBtn.style.display='none'; };
+    async function loadPast() {
+      const { data, error } = await supabase.from('execution_methodologies').select().order('created_at',{ascending:false});
+      const ul = document.getElementById('past-list'); ul.innerHTML='';
+      if (error) return showError('Load past failed: '+error.message);
+      data.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item.methodology.substring(0,100)+'...';
+        li.onclick = () => { outputDiv.textContent = item.methodology; showSection('create'); outputDiv.style.display='block'; saveBtn.style.display='none'; };
         ul.appendChild(li);
       });
     }
 
-    // Init
-    document.addEventListener('DOMContentLoaded', async()=>{
-      const { data:{ session } }=await supabase.auth.getSession();
-      if(!session) return location.href='index.html';
-      const meta=session.user.user_metadata;
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { data:{ session } } = await supabase.auth.getSession();
+      if (!session) return location.href='index.html';
+      const meta = session.user.user_metadata;
       document.getElementById('user-name').textContent=meta.full_name;
       document.getElementById('user-position').textContent=meta.position;
       document.getElementById('user-company').textContent=meta.company;
-      showSection('create');
-      ask();
+      showSection('create'); ask();
     });
 
-    function showError(msg){
+    function showError(msg) {
       document.getElementById('error-message').textContent=msg;
       document.getElementById('error-banner').style.display='block';
     }
