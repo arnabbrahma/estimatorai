@@ -15,6 +15,7 @@
     .modal-margin { margin-bottom: 30px; }
     .w3-modal { display: none; }
   </style>
+  <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
 </head>
 <body>
@@ -25,7 +26,7 @@
   </div>
 
   <!-- Sidebar/menu -->
-  <nav class="w3-sidebar w3-red w3-collapse w3-top w3-large w3-padding" id="mySidebar" style="z-index:3;width:300px;font-weight:bold;">
+  <nav id="mySidebar" class="w3-sidebar w3-red w3-collapse w3-top w3-large w3-padding" style="z-index:3;width:300px;font-weight:bold;">
     <a href="javascript:void(0)" onclick="w3_close()" class="w3-button w3-hide-large w3-display-topright" style="width:100%;font-size:22px">Close Menu</a>
     <div class="w3-container">
       <h3 class="w3-padding-64"><b>Methodology<br>Builder</b></h3>
@@ -37,17 +38,17 @@
       <a href="#contact" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Contact</a>
     </div>
   </nav>
-  <div class="w3-overlay w3-hide-large" onclick="w3_close()" id="myOverlay" title="close side menu" style="cursor:pointer"></div>
+  <div class="w3-overlay w3-hide-large" id="myOverlay" onclick="w3_close()" title="close side menu" style="cursor:pointer"></div>
 
   <div class="w3-main" style="margin-left:340px;margin-right:40px">
-    <div class="w3-container" style="margin-top:80px" id="features">
+    <div id="features" class="w3-container" style="margin-top:80px">
       <h1 class="w3-jumbo"><b>Build Winning Execution Plans</b></h1>
       <h1 class="w3-xxxlarge w3-text-red"><b>Features</b></h1>
       <hr style="width:50px;border:5px solid red" class="w3-round">
-      <p>Answer 6 guided questions about your bid scope, quality, safety, and strategy. Our AI will turn your responses into a professional execution methodology!</p>
+      <p>Answer guided questions and get a formatted execution methodology powered by AI!</p>
     </div>
 
-    <div class="w3-container" id="pricing" style="margin-top:75px">
+    <div id="pricing" class="w3-container" style="margin-top:75px">
       <h1 class="w3-xxxlarge w3-text-red"><b>Pricing</b></h1>
       <hr style="width:50px;border:5px solid red" class="w3-round">
       <div class="w3-row-padding">
@@ -66,8 +67,8 @@
         <div class="w3-half">
           <ul class="w3-ul w3-light-grey w3-center">
             <li class="w3-red w3-xlarge w3-padding-32">Pro</li>
-            <li class="w3-padding-16">Includes AI fine-tuning</li>
-            <li class="w3-padding-16">Chatbot History</li>
+            <li class="w3-padding-16">AI Fine-Tuning</li>
+            <li class="w3-padding-16">Chat History</li>
             <li class="w3-padding-16">Team Access</li>
             <li class="w3-padding-16"><h2>$249</h2><span class="w3-opacity">/ month</span></li>
             <li class="w3-light-grey w3-padding-24">
@@ -121,7 +122,7 @@
   </div>
 
   <script>
-    // Modal control functions
+    // Define modal controls before usage
     function openSignUp() { document.getElementById('id01').style.display = 'block'; }
     function closeSignUp() { document.getElementById('id01').style.display = 'none'; }
     function openSignIn() { document.getElementById('id02').style.display = 'block'; }
@@ -131,40 +132,34 @@
   </script>
 
   <script>
-    // Initialize Supabase client
+    // Initialize Supabase client and debug
     const supabaseClient = supabase.createClient(
       'https://6f017aef7a25c3d1b990e386bbe5fa55f03c058af2c8e4357c6f367d2a71ad13.supabase.co',
       'bd9b30706e131473f62897c9de8566f8eccbfda30df57ef07693cc267d32be5a'
     );
+    console.log('Supabase Client Initialized:', supabaseClient);
 
-    // Sign Up Handler (client-side)
+    // Sign Up Handler with debug
     document.getElementById('signupForm').onsubmit = async (e) => {
       e.preventDefault();
       const values = Object.fromEntries(new FormData(e.target));
-      console.log('Signing up with', values);
-      const { data, error } = await supabaseClient.auth.signUp({
-        email: values.email,
-        password: values.password
-      }, {
-        data: {
-          full_name: values.full_name,
-          company: values.company,
-          position: values.position,
-          package_selected: values.package_selected
-        }
-      });
-      console.log('signup response', { data, error });
+      console.log('Signing up with:', values);
+      const { data, error } = await supabaseClient.auth.signUp(
+        { email: values.email, password: values.password },
+        { data: { full_name: values.full_name, company: values.company, position: values.position, package_selected: values.package_selected } }
+      );
+      console.log('Signup response:', { data, error });
       if (error) alert(error.message);
-      else { alert('Registration successful! Please confirm your email.'); closeSignUp(); }
+      else { alert('Registration successful! Please check your email to confirm.'); closeSignUp(); }
     };
 
-    // Sign In Handler
+    // Sign In Handler with debug
     document.getElementById('signinForm').onsubmit = async (e) => {
       e.preventDefault();
       const { email, password } = Object.fromEntries(new FormData(e.target));
-      console.log('Signing in', { email });
+      console.log('Signing in:', { email });
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      console.log('signin response', { data, error });
+      console.log('Signin response:', { data, error });
       if (error) alert(error.message);
       else { alert('Login successful!'); closeSignIn(); }
     };
