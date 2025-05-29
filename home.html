@@ -19,23 +19,20 @@
     #chat-form { display: flex; margin-top: 10px; }
     #chat-input { flex: 1; padding: 8px; }
     #chat-submit { padding: 8px 16px; }
-    #methodology-output { margin-top: 20px; padding: 10px; background: #f9f9f9; border: 1px solid #ddd; white-space: pre-wrap; }
+    #methodology-output { margin-top: 20px; padding: 10px; background: #f9f9f9; border: 1px solid #ddd; }
     #save-btn { margin-top: 10px; }
   </style>
 </head>
 <body>
-  <!-- Error Banner -->
   <div id="error-banner" class="w3-panel w3-red">
     <span onclick="this.parentElement.style.display='none'" class="w3-button w3-display-topright">&times;</span>
     <p id="error-message"></p>
   </div>
 
-  <!-- Sign Out -->
   <div class="top-right-button">
     <button id="signoutBtn" class="w3-button w3-red">Sign Out</button>
   </div>
 
-  <!-- Sidebar -->
   <nav id="mySidebar" class="w3-sidebar w3-light-grey w3-top w3-collapse w3-large w3-padding" style="width:300px;z-index:3;">
     <div class="w3-container w3-blue">
       <h4 id="user-name">User Name</h4>
@@ -47,11 +44,9 @@
       <button class="w3-bar-item w3-button w3-hover-blue" id="btn-past">Past Plans</button>
     </div>
   </nav>
-  <div class="w3-overlay w3-hide-large" id="myOverlay" onclick="w3_close()"></div>
+  <div class="w3-overlay w3-hide-large" id="myOverlay"></div>
 
-  <!-- Main -->
   <div class="w3-main">
-    <!-- Create -->
     <section id="create" class="w3-container" style="display:none;">
       <h2>Create Execution Methodology</h2>
       <div id="chat-container"></div>
@@ -63,7 +58,6 @@
       <button id="save-btn" class="w3-button w3-blue" style="display:none;">Save Methodology</button>
     </section>
 
-    <!-- Past -->
     <section id="past" class="w3-container" style="display:none;">
       <h2>Past Execution Methodologies</h2>
       <ul id="past-list" class="w3-ul w3-card-4"></ul>
@@ -78,19 +72,26 @@
     );
 
     // DOM refs
+    const signoutBtn = document.getElementById('signoutBtn');
     const btnCreate = document.getElementById('btn-create');
     const btnPast = document.getElementById('btn-past');
-    const sections = {
-      create: document.getElementById('create'),
-      past: document.getElementById('past')
-    };
-    const chatC = document.getElementById('chat-container');
-    const chatForm = document.getElementById('chat-form');
-    const chatInput = document.getElementById('chat-input');
-    const outputDiv = document.getElementById('methodology-output');
-    const saveBtn = document.getElementById('save-btn');
+    const sections = { create: document.getElementById('create'), past: document.getElementById('past') };
 
-    // Questions
+    function showSection(id) {
+      Object.keys(sections).forEach(key => sections[key].style.display = key === id ? 'block' : 'none');
+      if (id === 'past') loadPast();
+    }
+
+    signoutBtn.onclick = async () => {
+      const { error } = await supabase.auth.signOut();
+      if (error) showError('Sign out failed: ' + error.message);
+      else location.href = 'index.html';
+    };
+
+    btnCreate.onclick = () => showSection('create');
+    btnPast.onclick = () => showSection('past');
+
+    // Chat flow
     const questions = [
       '1) Please submit the Scope of Work text.',
       '2) Provide the sequence of tasks as per schedule.',
@@ -102,6 +103,11 @@
     ];
     let answers = [];
     let qIndex = 0;
+    const chatC = document.getElementById('chat-container');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const outputDiv = document.getElementById('methodology-output');
+    const saveBtn = document.getElementById('save-btn');
 
     function render(msg, cls) {
       const d = document.createElement('div');
@@ -110,44 +116,7 @@
       chatC.appendChild(d);
       chatC.scrollTop = chatC.scrollHeight;
     }
-    function ask() {
-      render(questions[qIndex], 'assistant');
-    }
-
-    async function generateMethodology() {
-      render('Generating final execution methodology...', 'assistant');
-      try {
-        const payload = answers.map((ans, i) => `${questions[i]}\n${ans}`).join('\n\n');
-        const res = await fetch(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCilMPa97LvCV6adkmw-q0VICslksVYMoE',
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [
-                {
-                  role: 'user',
-                  parts: [
-                    { text: `Please provide an execution methodology from a contractor perspective to satisfy the client, based on all questions and answers:\n\n${payload}` }
-                  ]
-                }
-              ]
-            })
-          }
-        );
-        const js = await res.json();
-        if (js.error) throw new Error(js.error.message);
-        const candidates = js.result?.candidates || js.candidates;
-        if (!candidates) throw new Error('No candidates returned');
-        const exec = candidates[0].content.parts[0].text.trim();
-        render(exec, 'assistant');
-        outputDiv.textContent = exec;
-        outputDiv.style.display = 'block';
-        saveBtn.style.display = 'inline-block';
-      } catch (err) {
-        showError('AI generation failed: ' + err.message);
-      }
-    }
+    function ask() { render(questions[qIndex], 'assistant'); }
 
     chatForm.addEventListener('submit', async e => {
       e.preventDefault();
@@ -158,60 +127,59 @@
       chatInput.value = '';
       qIndex++;
       if (qIndex < questions.length) ask();
-      else generateMethodology();
+      else await generateMethodology();
     });
+
+    async function generateMethodology() {
+      render('Generating final execution methodology...', 'assistant');
+      try {
+        const payload = answers.map((ans, i) => `${questions[i]}\n${ans}`).join('\n\n');
+        const res = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyCilMPa97LvCV6adkmw-q0VICslksVYMoE',
+          { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify({ contents:[{ role:'user', parts:[{ text:`Create an execution methodology based on:
+
+${payload}` }] }] }) }
+        );
+        const js = await res.json();
+        if (js.error) throw new Error(js.error.message);
+        const exec = js.result.candidates[0].content.parts[0].text.trim();
+        render(exec,'assistant');
+        outputDiv.textContent = exec;
+        outputDiv.style.display='block';
+        saveBtn.style.display='inline-block';
+      } catch(err) { showError('AI generation failed: ' + err.message); }
+    }
 
     saveBtn.onclick = async () => {
       const { error } = await supabase.from('execution_methodologies').insert({ methodology: outputDiv.textContent });
-      if (error) showError('Save failed: ' + error.message);
-      else alert('Methodology saved!');
+      if (error) showError('Save failed: ' + error.message); else alert('Saved!');
     };
 
     async function loadPast() {
-      const { data, error } = await supabase.from('execution_methodologies').select().order('created_at', { ascending: false });
-      const ul = document.getElementById('past-list'); ul.innerHTML = '';
-      if (error) return showError('Load past failed: ' + error.message);
+      const { data, error } = await supabase.from('execution_methodologies').select().order('created_at',{ascending:false});
+      const ul = document.getElementById('past-list'); ul.innerHTML='';
+      if (error) return showError('Load past failed: '+error.message);
       data.forEach(item => {
         const li = document.createElement('li');
-        li.textContent = item.methodology.substring(0, 100) + '...';
-        li.onclick = () => {
-          outputDiv.textContent = item.methodology;
-          showSection('create');
-          outputDiv.style.display = 'block';
-          saveBtn.style.display = 'none';
-        };
+        li.textContent = item.methodology.substring(0,100)+'...';
+        li.onclick = () => { outputDiv.textContent = item.methodology; showSection('create'); outputDiv.style.display='block'; saveBtn.style.display='none'; };
         ul.appendChild(li);
       });
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      const signoutBtn = document.getElementById('signoutBtn');
-      signoutBtn.onclick = async () => {
-        const { error } = await supabase.auth.signOut();
-        if (error) showError('Sign out failed: ' + error.message);
-        else location.href = 'index.html';
-      };
-
-      btnCreate.onclick = () => showSection('create');
-      btnPast.onclick = () => showSection('past');
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        location.href = 'index.html';
-        return;
-      }
+      const { data:{ session } } = await supabase.auth.getSession();
+      if (!session) return location.href='index.html';
       const meta = session.user.user_metadata;
-      document.getElementById('user-name').textContent = meta.full_name;
-      document.getElementById('user-position').textContent = meta.position;
-      document.getElementById('user-company').textContent = meta.company;
-
-      showSection('create');
-      ask();
+      document.getElementById('user-name').textContent=meta.full_name;
+      document.getElementById('user-position').textContent=meta.position;
+      document.getElementById('user-company').textContent=meta.company;
+      showSection('create'); ask();
     });
 
     function showError(msg) {
-      document.getElementById('error-message').textContent = msg;
-      document.getElementById('error-banner').style.display = 'block';
+      document.getElementById('error-message').textContent=msg;
+      document.getElementById('error-banner').style.display='block';
     }
   </script>
 </body>
