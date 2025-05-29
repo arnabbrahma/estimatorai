@@ -1,2 +1,18 @@
-<!-- Saved Methodologies with rechat option -->
-<html>...</html>
+<!DOCTYPE html>
+<html>
+<head><title>Saved Plans</title><link rel="stylesheet" href="style.css"></head>
+<body>
+  <h2>Previous Methodologies</h2>
+  <ul id="list"></ul>
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+    const supabase = createClient('https://your-project.supabase.co', 'YOUR_PUBLIC_ANON_KEY');
+
+    const user_id = localStorage.getItem("user_id");
+    const { data, error } = await supabase.from("execution_plans").select("*").eq("user_id", user_id);
+    if (data) {
+      document.getElementById("list").innerHTML = data.map(p => \`<li>\${p.project_title}<pre>\${p.final_output}</pre></li>\`).join("");
+    }
+  </script>
+</body>
+</html>

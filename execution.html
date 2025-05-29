@@ -1,2 +1,27 @@
-<!-- Execution Methodology Output -->
-<html>...</html>
+<!DOCTYPE html>
+<html>
+<head><title>Execution Output</title><link rel="stylesheet" href="style.css"></head>
+<body>
+  <h2>Generated Execution Methodology</h2>
+  <pre id="output"></pre>
+  <button onclick="save()">Save</button>
+  <script>
+    document.getElementById("output").textContent = localStorage.getItem("final_output");
+
+    async function save() {
+      const user_id = localStorage.getItem("user_id");
+      const project_title = prompt("Project Title?");
+      const chat_log = JSON.parse(localStorage.getItem("chat_log"));
+
+      const res = await fetch("https://your-project.supabase.co/functions/v1/submit-execution-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id, project_title, chat_log })
+      });
+      const data = await res.json();
+      if (data.error) alert(data.error);
+      else alert("Saved successfully!");
+    }
+  </script>
+</body>
+</html>

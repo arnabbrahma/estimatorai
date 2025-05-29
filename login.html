@@ -1,2 +1,24 @@
-<!-- Login Page -->
-<html>...</html>
+<!DOCTYPE html>
+<html>
+<head><title>Login</title><link rel="stylesheet" href="style.css"></head>
+<body>
+  <h2>Login</h2>
+  <input id="email" type="email" placeholder="Email" />
+  <input id="password" type="password" placeholder="Password" />
+  <button onclick="login()">Login</button>
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+    const supabase = createClient('https://your-project.supabase.co', 'YOUR_PUBLIC_ANON_KEY');
+
+    window.login = async () => {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: document.getElementById("email").value,
+        password: document.getElementById("password").value,
+      });
+      if (error) return alert(error.message);
+      localStorage.setItem('user_id', data.user.id);
+      window.location.href = "home.html";
+    };
+  </script>
+</body>
+</html>
