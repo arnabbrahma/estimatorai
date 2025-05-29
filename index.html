@@ -7,15 +7,14 @@
   <link rel="stylesheet" href="https://www.w3schools.com/w3css/5/w3.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins">
   <style>
-    .w3-modal { display: none; }
     body,h1,h2,h3,h4,h5 {font-family: "Poppins", sans-serif}
     body {font-size:16px;}
     .w3-half img{margin-bottom:-6px;margin-top:16px;opacity:0.8;cursor:pointer}
     .w3-half img:hover{opacity:1}
     .top-right-button { position: absolute; top: 20px; right: 30px; }
     .modal-margin { margin-bottom: 30px; }
+    .w3-modal { display: none; }
   </style>
-  <!-- Supabase JS CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
 </head>
 <body>
@@ -122,34 +121,50 @@
   </div>
 
   <script>
-    // Modal control functions must be defined before use
+    // Modal control functions
     function openSignUp() { document.getElementById('id01').style.display = 'block'; }
     function closeSignUp() { document.getElementById('id01').style.display = 'none'; }
     function openSignIn() { document.getElementById('id02').style.display = 'block'; }
     function closeSignIn() { document.getElementById('id02').style.display = 'none'; }
-
     function w3_open() { document.getElementById('mySidebar').style.display = 'block'; document.getElementById('myOverlay').style.display = 'block'; }
     function w3_close() { document.getElementById('mySidebar').style.display = 'none'; document.getElementById('myOverlay').style.display = 'none'; }
   </script>
 
   <script>
-    // Initialize Supabase client after loading CDN script
-    const supabaseClient = supabase.createClient('https://6f017aef7a25c3d1b990e386bbe5fa55f03c058af2c8e4357c6f367d2a71ad13.supabase.co', 'bd9b30706e131473f62897c9de8566f8eccbfda30df57ef07693cc267d32be5a');
+    // Initialize Supabase client
+    const supabaseClient = supabase.createClient(
+      'https://6f017aef7a25c3d1b990e386bbe5fa55f03c058af2c8e4357c6f367d2a71ad13.supabase.co',
+      'bd9b30706e131473f62897c9de8566f8eccbfda30df57ef07693cc267d32be5a'
+    );
 
-    // Sign Up Handler
+    // Sign Up Handler (client-side)
     document.getElementById('signupForm').onsubmit = async (e) => {
       e.preventDefault();
       const values = Object.fromEntries(new FormData(e.target));
-      const { data, error } = await supabaseClient.functions.invoke('signup', { body: JSON.stringify(values) });
+      console.log('Signing up with', values);
+      const { data, error } = await supabaseClient.auth.signUp({
+        email: values.email,
+        password: values.password
+      }, {
+        data: {
+          full_name: values.full_name,
+          company: values.company,
+          position: values.position,
+          package_selected: values.package_selected
+        }
+      });
+      console.log('signup response', { data, error });
       if (error) alert(error.message);
-      else { alert('Registration successful!'); closeSignUp(); }
+      else { alert('Registration successful! Please confirm your email.'); closeSignUp(); }
     };
 
     // Sign In Handler
     document.getElementById('signinForm').onsubmit = async (e) => {
       e.preventDefault();
       const { email, password } = Object.fromEntries(new FormData(e.target));
+      console.log('Signing in', { email });
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      console.log('signin response', { data, error });
       if (error) alert(error.message);
       else { alert('Login successful!'); closeSignIn(); }
     };
