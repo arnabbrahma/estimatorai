@@ -15,26 +15,6 @@
     #error-banner { display: none; margin: 0; }
     .w3-main { margin-left:340px; margin-right:40px; padding-top:60px; }
   </style>
-  <!-- Supabase JS (ESM) -->
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-    const supabaseClient = createClient(
-      'https://vgiyutkufqgfgvixkhqz.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaXl1dGt1ZnFnZmd2aXhraHF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NDM2NjksImV4cCI6MjA2NDAxOTY2OX0.siQnaghNgiZpSj5p5LriQHN1ZkUs4DY7bdPSzD-mCrg'
-    );
-    window.supabaseClient = supabaseClient;
-    // Test connectivity
-    (async () => {
-      try {
-        const { error } = await supabaseClient.from('execution_methodologies').select('id').limit(1);
-        if (error) throw error;
-      } catch (err) {
-        console.error('Connection test failed', err);
-        document.getElementById('error-message').textContent = 'Supabase connection failed: check URL/key.';
-        document.getElementById('error-banner').style.display = 'block';
-      }
-    })();
-  </script>
 </head>
 <body>
   <!-- Error Banner -->
@@ -62,20 +42,20 @@
 
   <!-- Main Content -->
   <div class="w3-main">
-    <section id="features" class="w3-container">
+    <section id="features" class="w3-container" style="margin-top:80px;">
       <h1 class="w3-jumbo"><b>Build Winning Execution Plans</b></h1>
       <h2 class="w3-text-red">Features</h2>
-      <hr style="width:50px;border:5px solid red">
+      <hr style="width:50px;border:5px solid red;">
       <p>Answer guided questions and get a professional execution methodology.</p>
     </section>
 
     <section id="pricing" class="w3-container" style="margin-top:50px;">
       <h2 class="w3-text-red">Pricing</h2>
-      <hr style="width:50px;border:5px solid red">
+      <hr style="width:50px;border:5px solid red;">
       <div class="w3-row-padding">
         <div class="w3-half w3-margin-bottom">
           <ul class="w3-ul w3-light-grey w3-center">
-            <li class="w3-dark-grey w3-padding-32 w3-xlarge">Basic</li>
+            <li class="w3-dark-grey w3-xlarge w3-padding-32">Basic</li>
             <li class="w3-padding-16">Execution Plan Builder</li>
             <li class="w3-padding-16">Save & Rechat</li>
             <li class="w3-padding-16">Unlimited Projects</li>
@@ -87,7 +67,7 @@
         </div>
         <div class="w3-half">
           <ul class="w3-ul w3-light-grey w3-center">
-            <li class="w3-red w3-padding-32 w3-xlarge">Pro</li>
+            <li class="w3-red w3-xlarge w3-padding-32">Pro</li>
             <li class="w3-padding-16">AI Fine-Tuning</li>
             <li class="w3-padding-16">Chat History</li>
             <li class="w3-padding-16">Team Access</li>
@@ -140,42 +120,71 @@
 
     <section id="contact" class="w3-container" style="margin-top:50px;">
       <h2 class="w3-text-red">Contact</h2>
-      <hr style="width:50px;border:5px solid red">
+      <hr style="width:50px;border:5px solid red;">
       <p>Questions? Reach out anytime.</p>
     </section>
 
   </div>
 
   <script>
+    // Modal control functions
     function openSignUp() { document.getElementById('id01').style.display = 'block'; }
     function closeSignUp() { document.getElementById('id01').style.display = 'none'; }
     function openSignIn() { document.getElementById('id02').style.display = 'block'; }
     function closeSignIn() { document.getElementById('id02').style.display = 'none'; }
     function w3_open() { document.getElementById('mySidebar').style.display = 'block'; document.getElementById('myOverlay').style.display = 'block'; }
     function w3_close() { document.getElementById('mySidebar').style.display = 'none'; document.getElementById('myOverlay').style.display = 'none'; }
+  </script>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    const supabaseClient = createClient(
+      'https://vgiyutkufqgfgvixkhqz.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaXl1dGt1ZnFnZmd2aXhraHF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NDM2NjksImV4cCI6MjA2NDAxOTY2OX0.siQnaghNgiZpSj5p5LriQHN1ZkUs4DY7bdPSzD-mCrg'
+    );
+    window.supabaseClient = supabaseClient;
+
+    // Connectivity test
+    (async () => {
+      try {
+        const { error } = await supabaseClient.from('execution_methodologies').select('id').limit(1);
+        if (error) throw error;
+      } catch (err) {
+        console.error('Connection test failed', err);
+        document.getElementById('error-message').textContent = 'Supabase connection failed: check URL/key.';
+        document.getElementById('error-banner').style.display = 'block';
+      }
+    })();
 
     // Sign Up Handler
     document.getElementById('signupForm').onsubmit = async e => {
       e.preventDefault();
       const values = Object.fromEntries(new FormData(e.target));
-      const { data, error } = await window.supabaseClient.auth.signUp(
+      console.log('Signing up with:', values);
+      const { data, error } = await supabaseClient.auth.signUp(
         { email: values.email, password: values.password },
         { data: { full_name: values.full_name, company: values.company, position: values.position, package_selected: values.package_selected } }
       );
       console.log('Signup response:', { data, error });
-      if (error) showError(error.message); else { alert('Registration successful!'); closeSignUp(); }
+      if (error) showError(error.message);
+      else { alert('Registration successful!'); closeSignUp(); }
     };
 
     // Sign In Handler
     document.getElementById('signinForm').onsubmit = async e => {
       e.preventDefault();
       const { email, password } = Object.fromEntries(new FormData(e.target));
-      const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
+      console.log('Signing in:', { email });
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
       console.log('Signin response:', { data, error });
-      if (error) showError(error.message); else { alert('Login successful!'); closeSignIn(); }
+      if (error) showError(error.message);
+      else {
+        alert('Login successful!');
+        closeSignIn();
+        window.location.href = 'home.html';
+      }
     };
 
-    // Error Banner
     function showError(message) {
       document.getElementById('error-message').textContent = message;
       document.getElementById('error-banner').style.display = 'block';
