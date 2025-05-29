@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="https://www.w3schools.com/w3css/5/w3.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins">
   <style>
+    .w3-modal { display: none; }
     body,h1,h2,h3,h4,h5 {font-family: "Poppins", sans-serif}
     body {font-size:16px;}
     .w3-half img{margin-bottom:-6px;margin-top:16px;opacity:0.8;cursor:pointer}
@@ -14,142 +15,145 @@
     .top-right-button { position: absolute; top: 20px; right: 30px; }
     .modal-margin { margin-bottom: 30px; }
   </style>
+  <!-- Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
 </head>
 <body>
 
-<!-- Top-right Sign In Button -->
-<div class="top-right-button">
-  <button onclick="openSignIn()" class="w3-button w3-black">Sign In</button>
-</div>
-
-<!-- Sidebar/menu -->
-<nav class="w3-sidebar w3-red w3-collapse w3-top w3-large w3-padding" id="mySidebar" style="z-index:3;width:300px;font-weight:bold;">
-  <a href="javascript:void(0)" onclick="w3_close()" class="w3-button w3-hide-large w3-display-topright" style="width:100%;font-size:22px">Close Menu</a>
-  <div class="w3-container">
-    <h3 class="w3-padding-64"><b>Methodology<br>Builder</b></h3>
-  </div>
-  <div class="w3-bar-block">
-    <a href="#" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Home</a>
-    <a href="#features" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Features</a>
-    <a href="#pricing" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Pricing</a>
-    <a href="#contact" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Contact</a>
-  </div>
-</nav>
-<div class="w3-overlay w3-hide-large" onclick="w3_close()" id="myOverlay" title="close side menu" style="cursor:pointer"></div>
-
-<div class="w3-main" style="margin-left:340px;margin-right:40px">
-  <div class="w3-container" style="margin-top:80px" id="features">
-    <h1 class="w3-jumbo"><b>Build Winning Execution Plans</b></h1>
-    <h1 class="w3-xxxlarge w3-text-red"><b>Features</b></h1>
-    <hr style="width:50px;border:5px solid red" class="w3-round">
-    <p>Answer 6 guided questions about your bid scope, quality, safety, and strategy. Our AI will turn your responses into a professional execution methodology!</p>
+  <!-- Top-right Sign In Button -->
+  <div class="top-right-button">
+    <button onclick="openSignIn()" class="w3-button w3-black">Sign In</button>
   </div>
 
-  <div class="w3-container" id="pricing" style="margin-top:75px">
-    <h1 class="w3-xxxlarge w3-text-red"><b>Pricing</b></h1>
-    <hr style="width:50px;border:5px solid red" class="w3-round">
-    <div class="w3-row-padding">
-      <div class="w3-half w3-margin-bottom">
-        <ul class="w3-ul w3-light-grey w3-center">
-          <li class="w3-dark-grey w3-xlarge w3-padding-32">Basic</li>
-          <li class="w3-padding-16">Execution Plan Builder</li>
-          <li class="w3-padding-16">Save & Rechat</li>
-          <li class="w3-padding-16">Unlimited Projects</li>
-          <li class="w3-padding-16"><h2>$179</h2><span class="w3-opacity">/ month</span></li>
-          <li class="w3-light-grey w3-padding-24">
-            <button onclick="openSignUp()" class="w3-button w3-white w3-padding-large w3-hover-black">Subscribe</button>
-          </li>
-        </ul>
-      </div>
-      <div class="w3-half">
-        <ul class="w3-ul w3-light-grey w3-center">
-          <li class="w3-red w3-xlarge w3-padding-32">Pro</li>
-          <li class="w3-padding-16">Includes AI fine-tuning</li>
-          <li class="w3-padding-16">Chatbot History</li>
-          <li class="w3-padding-16">Team Access</li>
-          <li class="w3-padding-16"><h2>$249</h2><span class="w3-opacity">/ month</span></li>
-          <li class="w3-light-grey w3-padding-24">
-            <button onclick="openSignUp()" class="w3-button w3-red w3-padding-large w3-hover-black">Subscribe</button>
-          </li>
-        </ul>
+  <!-- Sidebar/menu -->
+  <nav class="w3-sidebar w3-red w3-collapse w3-top w3-large w3-padding" id="mySidebar" style="z-index:3;width:300px;font-weight:bold;">
+    <a href="javascript:void(0)" onclick="w3_close()" class="w3-button w3-hide-large w3-display-topright" style="width:100%;font-size:22px">Close Menu</a>
+    <div class="w3-container">
+      <h3 class="w3-padding-64"><b>Methodology<br>Builder</b></h3>
+    </div>
+    <div class="w3-bar-block">
+      <a href="#" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Home</a>
+      <a href="#features" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Features</a>
+      <a href="#pricing" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Pricing</a>
+      <a href="#contact" onclick="w3_close()" class="w3-bar-item w3-button w3-hover-white">Contact</a>
+    </div>
+  </nav>
+  <div class="w3-overlay w3-hide-large" onclick="w3_close()" id="myOverlay" title="close side menu" style="cursor:pointer"></div>
+
+  <div class="w3-main" style="margin-left:340px;margin-right:40px">
+    <div class="w3-container" style="margin-top:80px" id="features">
+      <h1 class="w3-jumbo"><b>Build Winning Execution Plans</b></h1>
+      <h1 class="w3-xxxlarge w3-text-red"><b>Features</b></h1>
+      <hr style="width:50px;border:5px solid red" class="w3-round">
+      <p>Answer 6 guided questions about your bid scope, quality, safety, and strategy. Our AI will turn your responses into a professional execution methodology!</p>
+    </div>
+
+    <div class="w3-container" id="pricing" style="margin-top:75px">
+      <h1 class="w3-xxxlarge w3-text-red"><b>Pricing</b></h1>
+      <hr style="width:50px;border:5px solid red" class="w3-round">
+      <div class="w3-row-padding">
+        <div class="w3-half w3-margin-bottom">
+          <ul class="w3-ul w3-light-grey w3-center">
+            <li class="w3-dark-grey w3-xlarge w3-padding-32">Basic</li>
+            <li class="w3-padding-16">Execution Plan Builder</li>
+            <li class="w3-padding-16">Save & Rechat</li>
+            <li class="w3-padding-16">Unlimited Projects</li>
+            <li class="w3-padding-16"><h2>$179</h2><span class="w3-opacity">/ month</span></li>
+            <li class="w3-light-grey w3-padding-24">
+              <button onclick="openSignUp()" class="w3-button w3-white w3-padding-large w3-hover-black">Subscribe</button>
+            </li>
+          </ul>
+        </div>
+        <div class="w3-half">
+          <ul class="w3-ul w3-light-grey w3-center">
+            <li class="w3-red w3-xlarge w3-padding-32">Pro</li>
+            <li class="w3-padding-16">Includes AI fine-tuning</li>
+            <li class="w3-padding-16">Chatbot History</li>
+            <li class="w3-padding-16">Team Access</li>
+            <li class="w3-padding-16"><h2>$249</h2><span class="w3-opacity">/ month</span></li>
+            <li class="w3-light-grey w3-padding-24">
+              <button onclick="openSignUp()" class="w3-button w3-red w3-padding-large w3-hover-black">Subscribe</button>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Sign Up Modal -->
-  <div id="id01" class="w3-modal">
-    <div class="w3-modal-content w3-card-4 w3-animate-opacity modal-margin" style="max-width:600px">
-      <div class="w3-container">
-        <span onclick="closeSignUp()" class="w3-button w3-display-topright">&times;</span>
-        <h2>Sign Up</h2>
-        <form id="signupForm" class="w3-container">
-          <p><input class="w3-input w3-border" name="full_name" placeholder="Full Name" required></p>
-          <p><input class="w3-input w3-border" name="company" placeholder="Company Name" required></p>
-          <p><input class="w3-input w3-border" name="position" placeholder="Position" required></p>
-          <p><input class="w3-input w3-border" name="email" type="email" placeholder="Email" required></p>
-          <p><input class="w3-input w3-border" name="password" type="password" placeholder="Password" required></p>
-          <p>
-            <select class="w3-select w3-border" name="package_selected" required>
-              <option value="" disabled selected>Select a Package</option>
-              <option value="basic">Basic - $179/month</option>
-              <option value="pro">Pro - $249/month</option>
-            </select>
-          </p>
-          <p class="w3-center"><button type="submit" class="w3-button w3-green">Create Account</button></p>
-        </form>
+    <!-- Sign Up Modal -->
+    <div id="id01" class="w3-modal">
+      <div class="w3-modal-content w3-card-4 w3-animate-opacity modal-margin" style="max-width:600px">
+        <div class="w3-container">
+          <span onclick="closeSignUp()" class="w3-button w3-display-topright">&times;</span>
+          <h2>Sign Up</h2>
+          <form id="signupForm" class="w3-container">
+            <p><input class="w3-input w3-border" name="full_name" placeholder="Full Name" required></p>
+            <p><input class="w3-input w3-border" name="company" placeholder="Company Name" required></p>
+            <p><input class="w3-input w3-border" name="position" placeholder="Position" required></p>
+            <p><input class="w3-input w3-border" name="email" type="email" placeholder="Email" required></p>
+            <p><input class="w3-input w3-border" name="password" type="password" placeholder="Password" required></p>
+            <p>
+              <select class="w3-select w3-border" name="package_selected" required>
+                <option value="" disabled selected>Select a Package</option>
+                <option value="basic">Basic - $179/month</option>
+                <option value="pro">Pro - $249/month</option>
+              </select>
+            </p>
+            <p class="w3-center"><button type="submit" class="w3-button w3-green">Create Account</button></p>
+          </form>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Sign In Modal -->
-  <div id="id02" class="w3-modal">
-    <div class="w3-modal-content w3-card-4 w3-animate-opacity modal-margin" style="max-width:500px">
-      <div class="w3-container">
-        <span onclick="closeSignIn()" class="w3-button w3-display-topright">&times;</span>
-        <h2>Sign In</h2>
-        <form id="signinForm" class="w3-container">
-          <p><input class="w3-input w3-border" name="email" type="email" placeholder="Email" required></p>
-          <p><input class="w3-input w3-border" name="password" type="password" placeholder="Password" required></p>
-          <p class="w3-center"><button type="submit" class="w3-button w3-black">Log In</button></p>
-        </form>
+    <!-- Sign In Modal -->
+    <div id="id02" class="w3-modal">
+      <div class="w3-modal-content w3-card-4 w3-animate-opacity modal-margin" style="max-width:500px">
+        <div class="w3-container">
+          <span onclick="closeSignIn()" class="w3-button w3-display-topright">&times;</span>
+          <h2>Sign In</h2>
+          <form id="signinForm" class="w3-container">
+            <p><input class="w3-input w3-border" name="email" type="email" placeholder="Email" required></p>
+            <p><input class="w3-input w3-border" name="password" type="password" placeholder="Password" required></p>
+            <p class="w3-center"><button type="submit" class="w3-button w3-black">Log In</button></p>
+          </form>
+        </div>
       </div>
     </div>
+
   </div>
 
-</div>
+  <script>
+    // Modal control functions must be defined before use
+    function openSignUp() { document.getElementById('id01').style.display = 'block'; }
+    function closeSignUp() { document.getElementById('id01').style.display = 'none'; }
+    function openSignIn() { document.getElementById('id02').style.display = 'block'; }
+    function closeSignIn() { document.getElementById('id02').style.display = 'none'; }
 
-<script>
-  // Initialize Supabase client
-  const supabase = supabase.createClient('https://6f017aef7a25c3d1b990e386bbe5fa55f03c058af2c8e4357c6f367d2a71ad13.supabase.co', 'bd9b30706e131473f62897c9de8566f8eccbfda30df57ef07693cc267d32be5a');
+    function w3_open() { document.getElementById('mySidebar').style.display = 'block'; document.getElementById('myOverlay').style.display = 'block'; }
+    function w3_close() { document.getElementById('mySidebar').style.display = 'none'; document.getElementById('myOverlay').style.display = 'none'; }
+  </script>
 
-  // Modal control functions (global scope)
-  window.openSignUp = () => document.getElementById('id01').style.display = 'block';
-  window.closeSignUp = () => document.getElementById('id01').style.display = 'none';
-  window.openSignIn = () => document.getElementById('id02').style.display = 'block';
-  window.closeSignIn = () => document.getElementById('id02').style.display = 'none';
+  <script>
+    // Initialize Supabase client after loading CDN script
+    const supabaseClient = supabase.createClient('https://6f017aef7a25c3d1b990e386bbe5fa55f03c058af2c8e4357c6f367d2a71ad13.supabase.co', 'bd9b30706e131473f62897c9de8566f8eccbfda30df57ef07693cc267d32be5a');
 
-  // Sign Up Handler
-  document.getElementById('signupForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const values = Object.fromEntries(new FormData(form));
-    const { data, error } = await supabase.functions.invoke('signup', { body: JSON.stringify(values) });
-    if (error) alert(error.message);
-    else { alert('Registration successful!'); closeSignUp(); }
-  };
+    // Sign Up Handler
+    document.getElementById('signupForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const values = Object.fromEntries(new FormData(e.target));
+      const { data, error } = await supabaseClient.functions.invoke('signup', { body: JSON.stringify(values) });
+      if (error) alert(error.message);
+      else { alert('Registration successful!'); closeSignUp(); }
+    };
 
-  // Sign In Handler
-  document.getElementById('signinForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const { email, password } = Object.fromEntries(new FormData(e.target));
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) alert(error.message);
-    else { alert('Login successful!'); closeSignIn(); }
-  };
-
-  function w3_open() { document.getElementById('mySidebar').style.display = 'block'; document.getElementById('myOverlay').style.display = 'block'; }
-  function w3_close() { document.getElementById('mySidebar').style.display = 'none'; document.getElementById('myOverlay').style.display = 'none'; }
-</script>
+    // Sign In Handler
+    document.getElementById('signinForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const { email, password } = Object.fromEntries(new FormData(e.target));
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) alert(error.message);
+      else { alert('Login successful!'); closeSignIn(); }
+    };
+  </script>
 
 </body>
 </html>
