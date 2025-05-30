@@ -77,6 +77,77 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZnaXl1dGt1ZnFnZmd2aXhraHF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0NDM2NjksImV4cCI6MjA2NDAxOTY2OX0.siQnaghNgiZpSj5p5LriQHN1ZkUs4DY7bdPSzD-mCrg'
     );
 
+    let sessionUser;
+
+    const sections = {
+      create: document.getElementById('create'),
+      past: document.getElementById('past')
+    };
+    function showSection(id) {
+      Object.keys(sections).forEach(key => {
+        sections[key].style.display = key === id ? 'block' : 'none';
+      });
+      if (id === 'past') loadPast();
+    }
+
+    function w3_close() {
+      document.getElementById('mySidebar').style.display = 'none';
+      document.getElementById('myOverlay').style.display = 'none';
+    }
+
+    const signoutBtn = document.getElementById('signoutBtn');
+    const btnCreate = document.getElementById('btn-create');
+    const btnPast = document.getElementById('btn-past');
+    const chatC = document.getElementById('chat-container');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const outputDiv = document.getElementById('methodology-output');
+    const saveBtn = document.getElementById('save-btn');
+
+    signoutBtn.onclick = async () => {
+      const { error } = await supabase.auth.signOut();
+      if (error) showError('Sign out failed: ' + error.message);
+      else location.href = 'index.html';
+    };
+
+    btnCreate.onclick = () => showSection('create');
+    btnPast.onclick = () => showSection('past');
+
+    const questions = [
+      '1) Please submit the Scope of Work text.',
+      '2) Provide the sequence of tasks as per schedule.',
+      '3) Provide your quality procedure details.',
+      '4) Describe the technology used by your company.',
+      '5) Provide safety details.',
+      '6) Provide labor strategy details.',
+      '7) Provide material/subcontractor plan details.'
+    ];
+    let answers = [];
+    let qIndex = 0;
+
+    function render(msg, cls) {
+      const d = document.createElement('div');
+      d.className = 'message ' + cls;
+      d.textContent = msg;
+      chatC.appendChild(d);
+      chatC.scrollTop = chatC.scrollHeight;
+    }
+    function ask() {
+      render(questions[qIndex], 'assistant');
+    }
+
+    chatForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const txt = chatInput.value.trim();
+      if (!txt) return;
+      render(txt, 'user');
+      answers.push(txt);
+      chatInput.value = '';
+      qIndex++;
+      if (qIndex < questions.length) ask();
+      else await submitExecutionPlan();
+    });
+
     async function submitExecutionPlan() {
       render('Generating final execution methodology...', 'assistant');
       try {
@@ -91,18 +162,10 @@
           labor: answers[5],
           materials: answers[6]
         };
-
-        const response = await fetch('/functions/v1/submit-execution-plan', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
+        const { data, error } = await supabase.functions.invoke('submit-execution-plan', {
+          body: payload
         });
-
-        if (!response.ok) throw new Error('Failed to send a request to the Edge Function');
-
-        const data = await response.json();
+        if (error) throw error;
         const exec = data.execution_plan;
         render(exec, 'assistant');
         outputDiv.textContent = exec;
@@ -111,6 +174,44 @@
       } catch (err) {
         showError('Function call failed: ' + err.message);
       }
+    }
+
+    saveBtn.onclick = async () => {
+      const { error } = await supabase.from('execution_methodologies').insert({ methodology: outputDiv.textContent });
+      if (error) showError('Save failed: ' + error.message);
+      else alert('Methodology saved to DB!');
+    };
+
+    async function loadPast() {
+      const { data, error } = await supabase.from('execution_methodologies').select().order('created_at', { ascending: false });
+      const ul = document.getElementById('past-list'); ul.innerHTML = '';
+      if (error) return showError('Load past failed: ' + error.message);
+      data.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item.methodology.substring(0, 100) + '...';
+        li.onclick = () => {
+          outputDiv.textContent = item.methodology;
+          showSection('create'); outputDiv.style.display = 'block'; saveBtn.style.display = 'none';
+        };
+        ul.appendChild(li);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return location.href = 'index.html';
+      sessionUser = session.user;
+      const meta = sessionUser.user_metadata;
+      document.getElementById('user-name').textContent = meta.full_name;
+      document.getElementById('user-position').textContent = meta.position;
+      document.getElementById('user-company').textContent = meta.company;
+      showSection('create');
+      ask();
+    });
+
+    function showError(msg) {
+      document.getElementById('error-message').textContent = msg;
+      document.getElementById('error-banner').style.display = 'block';
     }
   </script>
 </body>
