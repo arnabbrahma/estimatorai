@@ -162,10 +162,13 @@
           labor: answers[5],
           materials: answers[6]
         };
+
         const { data, error } = await supabase.functions.invoke('submit-execution-plan', {
           body: payload
         });
-        if (error) throw error;
+
+        if (error) throw new Error(error.message || 'Edge Function failed');
+
         const exec = data.execution_plan;
         render(exec, 'assistant');
         outputDiv.textContent = exec;
