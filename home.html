@@ -27,7 +27,7 @@
   <!-- Error Banner -->
   <div id="error-banner" class="w3-panel w3-red">
     <span onclick="this.parentElement.style.display='none'" class="w3-button w3-display-topright">&times;</span>
-    <p id="error-message"></p>
+    <pre id="error-message"></pre>
   </div>
 
   <!-- Sign Out -->
@@ -162,20 +162,21 @@
           labor: answers[5],
           materials: answers[6]
         };
+        const response = await supabase.functions.invoke('submit-execution-plan', { body: payload });
 
-        const { data, error } = await supabase.functions.invoke('submit-execution-plan', {
-          body: payload
-        });
+        if (response.error || !response.data) {
+          console.error('Function Error Response:', response);
+          throw new Error(`Edge Function Error: ${response.error?.message || 'Unknown error'}\nFull Response: ${JSON.stringify(response)}`);
+        }
 
-        if (error) throw new Error(error.message || 'Edge Function failed');
-
-        const exec = data.execution_plan;
+        const exec = response.data.execution_plan;
         render(exec, 'assistant');
         outputDiv.textContent = exec;
         outputDiv.style.display = 'block';
         saveBtn.style.display = 'inline-block';
       } catch (err) {
         showError('Function call failed: ' + err.message);
+        console.error(err);
       }
     }
 
