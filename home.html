@@ -79,7 +79,6 @@
 
     let sessionUser;
 
-    // Section navigation
     const sections = {
       create: document.getElementById('create'),
       past: document.getElementById('past')
@@ -91,13 +90,11 @@
       if (id === 'past') loadPast();
     }
 
-    // Sidebar overlay close
     function w3_close() {
       document.getElementById('mySidebar').style.display = 'none';
       document.getElementById('myOverlay').style.display = 'none';
     }
 
-    // DOM refs
     const signoutBtn = document.getElementById('signoutBtn');
     const btnCreate = document.getElementById('btn-create');
     const btnPast = document.getElementById('btn-past');
@@ -107,7 +104,6 @@
     const outputDiv = document.getElementById('methodology-output');
     const saveBtn = document.getElementById('save-btn');
 
-    // Sign Out
     signoutBtn.onclick = async () => {
       const { error } = await supabase.auth.signOut();
       if (error) showError('Sign out failed: ' + error.message);
@@ -117,7 +113,6 @@
     btnCreate.onclick = () => showSection('create');
     btnPast.onclick = () => showSection('past');
 
-    // Guided questions
     const questions = [
       '1) Please submit the Scope of Work text.',
       '2) Provide the sequence of tasks as per schedule.',
@@ -141,7 +136,6 @@
       render(questions[qIndex], 'assistant');
     }
 
-    // Chat form submit
     chatForm.addEventListener('submit', async e => {
       e.preventDefault();
       const txt = chatInput.value.trim();
@@ -154,11 +148,9 @@
       else await submitExecutionPlan();
     });
 
-    // Submit to Edge Function instead of direct Gemini
     async function submitExecutionPlan() {
       render('Generating final execution methodology...', 'assistant');
       try {
-        // Build payload
         const payload = {
           user_id: sessionUser.id,
           project_name: 'Default Project',
@@ -170,7 +162,6 @@
           labor: answers[5],
           materials: answers[6]
         };
-        console.log('Calling Edge Function with:', payload);
         const { data, error } = await supabase.functions.invoke('submit-execution-plan', {
           body: payload
         });
@@ -185,14 +176,12 @@
       }
     }
 
-    // Save methodology (duplicate storage)
     saveBtn.onclick = async () => {
       const { error } = await supabase.from('execution_methodologies').insert({ methodology: outputDiv.textContent });
       if (error) showError('Save failed: ' + error.message);
       else alert('Methodology saved to DB!');
     };
 
-    // Load past
     async function loadPast() {
       const { data, error } = await supabase.from('execution_methodologies').select().order('created_at', { ascending: false });
       const ul = document.getElementById('past-list'); ul.innerHTML = '';
@@ -208,7 +197,6 @@
       });
     }
 
-    // Initialize on load
     document.addEventListener('DOMContentLoaded', async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return location.href = 'index.html';
@@ -221,7 +209,6 @@
       ask();
     });
 
-    // Display errors
     function showError(msg) {
       document.getElementById('error-message').textContent = msg;
       document.getElementById('error-banner').style.display = 'block';
